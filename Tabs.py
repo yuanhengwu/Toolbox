@@ -13,58 +13,57 @@ notepadpp_candidates = [
 ]
 
 
-def open_default(url):
+def open_default(site_list):
     """
     Open the given URL with the system default browser (new tab).
     Falls back to os.startfile on Windows if webbrowser fails.
     """
-    try:
-        webbrowser.open(url, new=2)
-    except Exception:
+    for url in site_list:
         try:
-            if os.name == 'nt':
-                os.startfile(url)
-            else:
-                subprocess.Popen(['xdg-open', url])
+            webbrowser.open(url, new=2)
         except Exception:
-            pass
+            try:
+                if os.name == 'nt':
+                    os.startfile(url)
+                else:
+                    subprocess.Popen(['xdg-open', url])
+            except Exception:
+                pass
 
 
-def open_chrome(url, incognito=False):
+def open_chrome(site_list, incognito=False):
     """
-    Open the given URL using the Chrome executable defined by chrome_path.
+    Open the given site_list using the Chrome executable defined by chrome_path.
     If Chrome is not found, fall back to the default browser.
     """
     if not os.path.exists(chrome_path):
-        open_default(url)
+        open_default(site_list)
         return
 
     cmd = [chrome_path]
     if incognito:
         cmd.append('--incognito')
-    cmd.append(url)
+    cmd.extend(site_list)
     try:
         subprocess.Popen(cmd)
     except Exception:
-        open_default(url)
+        open_default(site_list)
 
 
-def open_sites(sites, incognito=False, browser='default'):
+def open_sites(site_list, incognito=False, browser='default'):
     """
     Open an iterable of URLs.
     browser: 'chrome' or 'default' (case-insensitive).
     incognito: boolean, effective only when browser == 'chrome'.
     """
-    if not sites:
+    if not site_list:
         return
 
     browser_key = (browser or 'default').lower()
     if browser_key == 'chrome':
-        for url in sites:
-            open_chrome(url, incognito)
+        open_chrome(site_list, incognito)
     else:
-        for url in sites:
-            open_default(url)
+        open_default(site_list)
 
 
 def show_group_editor(site_list, title=None, parent=None):
